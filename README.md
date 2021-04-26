@@ -31,3 +31,7 @@ or just install numpy, and Pillow
 ```sh
 pip install numpy Pillow
 ```
+
+## Sample
+
+![sample randomly generated maze](./sample.png)
