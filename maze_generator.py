@@ -2,9 +2,18 @@ import numpy as np
 
 from union_find import UnionFind
 
-def generate_maze(width, height, box_size, line_width):
+def generate_maze(width: int, height: int, box_size: int, line_width: int):
+    '''
+    Generate numpy 2-D array representing each pixel of screen
+    '''
     
-    def _adjacent_blocks(index):
+    def _adjacent_blocks(index: int):
+        '''
+        @arg index index of inner wall
+          if index is odd, the wall is horizontal,
+          and (index // 2) is the index of block which the wall is attached.
+        @return indices of two blocks related to the wall
+        '''
         is_horizontal = index & 1
         index >>= 1
         x = index // width
@@ -15,30 +24,35 @@ def generate_maze(width, height, box_size, line_width):
         return (x * width + y), (nx * width + ny)
 
     def _build_spanning_tree():
-        uf = UnionFind(2 * width * height)
+        '''
+        Randomly select indices of walls to remove,
+        for connection of each blocks satisfying tree structure (no cycle)
+        '''
+        uf = UnionFind(2 * width * height) # Tracking if two blocks are already connected or not.
         indices = np.arange(2 * width * height)
         np.random.shuffle(indices)
         cnt, thres = 0, width * height - 1
         removed = []
         for index in indices:
-            a, b = _adjacent_blocks(index)
-            if a is None or b is None: continue
+            a, b = _adjacent_blocks(index) # the blocks related to this wall
+            if a is None or b is None: continue # Out of bound
             if uf.merge(a, b):
                 removed.append(index)
                 cnt += 1
-                if cnt >= thres: break
+                if cnt >= thres: break # Tree feature: (N-1) connections exist
         return removed
     
     removed = frozenset(_build_spanning_tree())
 
     sz_width  = width  * box_size + (width  + 1) * line_width
     sz_height = height * box_size + (height + 1) * line_width 
-    screen = np.zeros((sz_height, sz_width))
+    screen = np.zeros((sz_height, sz_width)) # Screen buffer array
 
-    screen[:,:line_width] = 1
-    screen[:line_width,:] = 1
-    screen[:,-line_width:] = 1
-    screen[-line_width:,:] = 1
+    # Draw borderlines
+    screen[:,:line_width] = 1 # LEFT
+    screen[:line_width,:] = 1 # TOP
+    screen[:,-line_width:] = 1 # RIGHT
+    screen[-line_width:,:] = 1 # BOTTOM
 
     index = 0
     for x in range(height):
